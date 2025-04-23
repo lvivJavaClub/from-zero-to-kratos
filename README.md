@@ -1,111 +1,136 @@
 # From Zero to Kratos
 
----
-
-## 🗂️ Agenda
-
-- Why we chose Kratos
-- My experience: integration with Java
-- Kratos vs Keycloak/Auth0 (brief)
-- Deployment overview
-- Q&A
+Identity infrastructure that feels like code — not a black box.
 
 ---
 
-## Why we chose Kratos
+## 🔍 What is Kratos?
 
-In our project, we needed something:
+Ory Kratos is an open-source identity and user management system built for engineers:
 
-- That we can fully control
-- That doesn’t lock us into a vendor
-- That we can run locally and scale later
-
-I tried Auth0 — great docs but limited without $$$.
-Tried Keycloak — too heavy, complex to theme, and opinionated.
-Kratos felt like a good fit: it's just identity, not everything.
+- Fully headless (API-first)
+- Manages registration, login, password recovery
+- Supports both sessions (cookies) and JWTs
+- Identity traits defined via JSON Schema
 
 ---
 
-## What is Kratos?
+## 🧩 Why Kratos?
 
-- Open-source identity service
-- Manages:
-    - Registration / Login
-    - Password recovery
-    - Sessions (cookie or JWT)
-- Headless: no UI, just flows via API
-
----
-
-## Why Kratos is more than just Kratos
-
-Kratos is part of the **Ory ecosystem**, and that’s where it gets fascinating:
-
-- **Kratos** — Identity: users, sessions, recovery
-- **Hydra** — OAuth2 & OpenID Connect provider
-- **Oathkeeper** — API gateway with RBAC and JWT validation
-- **Keto** — Google Zanzibar-style permission system (fine-grained auth)
-
-🧩 You can plug Kratos into Spring Boot — but if your architecture grows, the rest of Ory is ready to support it.
-
-> In our case, we used just Kratos, but the ecosystem gives confidence it can scale.
-
-### What stood out in practice:
-
-- API-first: everything is a REST call
-- Flows make state explicit: login, registration, recovery — you track them via flow IDs
-- Full control: want a CLI user signup? You can. Want a custom form from your React app? No problem.
-- Built-in JSON schema validation for identities
-- You can define traits like `email`, `role`, `verified`, and enforce them across all flows
-- Works with browser sessions or JWTs — you choose the mode
-- Has built-in support for:
-    - Email verification and recovery
-    - Webhooks on key actions (registration, login)
-    - MFA (TOTP) via extensions
-
-### For engineers, this means:
-
-- No UI lock-in: build UX that fits your stack (React, Thymeleaf, JTE, mobile app — doesn't matter)
-- No magic "black boxes" — each step of the user journey is exposed and manageable
-- Debuggable: you can trace every decision via logs or API
-- Secure by default: CSRF protection, hashed passwords, validated flows
-
-Yes, Kratos requires effort.
-But it gives you identity that **feels like infrastructure, not a hack**.
+- 🔧 Fully customizable flows (registration, login, etc.)
+- 🧠 No UI lock-in — bring your own frontend
+- 🔐 Secure by default: CSRF protection, hashed passwords, verified flows
+- 🧪 Built-in identity validation via JSON schema
+- 🔄 Works with browser sessions or machine clients
 
 ---
 
-## Kratos vs Others
+## 🧱 Ory Ecosystem
 
-| Feature              | Kratos       | Keycloak | Auth0        |
-|----------------------|--------------|----------|--------------|
-| Open-source          | ✅            | ✅        | ❌ (limited)  |
-| Self-hosted          | ✅            | ✅        | ⚠️ via proxy |
-| Headless             | ✅            | ❌        | ❌            |
-| UI Provided          | ❌            | ✅        | ✅            |
-| Authorization Engine | ❌ (external) | ✅        | ✅            |
+- **Kratos** — identity and sessions
+- **Hydra** — OAuth2/OpenID Connect server
+- **Oathkeeper** — identity-aware proxy/gateway
+- **Keto** — permission engine (Zanzibar-style access control)
 
----
+🧩 Start with Kratos. Grow into the rest.
 
-## Deployment (Short Version)
-
-- Run with Docker (simple)
-- Use PostgresSQL in prod (not SQLite)
-- Helm chart available if you use K8s
-- Secure Admin API behind VPN or gateway
-- TLS via ingress (e.g. Traefik)
+![ory_ecosystem_diagram.png](ory_ecosystem_diagram.png)
 
 ---
 
-## Final Thoughts
+## 🔐 What is Zanzibar-style Access Control?
 
-- Kratos isn't magical. It's just clean and honest.
-- Good for teams who want control, not magic.
-- You’ll write more code, but you’ll understand it.
+Zanzibar-style = relationship-based access control.  
+It answers:  
+**"Can user X do action Y on resource Z?"**
+
+### 🧠 Key Concepts
+- Resources (e.g. documents, files)
+- Subjects (users, groups, roles)
+- Relations (viewer, editor, owner)
+- Permissions derived from these relationships
+
+### 🧩 Example
+```yaml
+document:report-2024:
+  relations:
+    viewer: [user:Ihor]
+    editor: [group:team-red]
+    owner:  [user:Stepan]
+```
+
+Check:  
+_"Can `Ihor` edit `report-2024`?"_ → No, but can view.
+
+### ✅ Why it matters
+- Works at scale (millions of objects)
+- Flexible for orgs, roles, subscriptions, time-based access
+- Clean separation of permission logic from app code
 
 ---
 
-## 🙋 Q&A
+## ⚔️ Kratos vs Others
 
-_What else do you want to know?_
+| Feature                       | Kratos       | Keycloak | Auth0        |
+|-------------------------------|--------------|----------|--------------|
+| Open-source                   | ✅            | ✅        | ❌ (limited)  |
+| Self-hosted                   | ✅            | ✅        | ⚠️ via proxy |
+| Headless (no UI lock-in)      | ✅            | ❌        | ❌            |
+| Provided UI                   | ❌ (ref impl) | ✅        | ✅            |
+| Custom Flow Logic             | ✅            | ⚠️       | ❌            |
+| Authorization Engine          | ❌ (Keto)     | ✅        | ✅            |
+| OAuth2 / OIDC Support         | ❌ (Hydra)    | ✅        | ✅            |
+| JSON Trait Validation         | ✅            | ❌        | ❌            |
+| Webhook Support               | ✅            | ⚠️       | ❌            |
+| Multi-Factor Auth (TOTP)      | ✅            | ✅        | ✅            |
+| Email Verification & Recovery | ✅            | ✅        | ✅            |
+| Admin API                     | ✅            | ✅        | ⚠️ Limited   |
+
+---
+
+## 🧪 Full Demo Flow Overview
+
+During the live demo, we will cover:
+
+- ✅ **Self-service UI:** Register → Verify Email → Login → Logout
+- ✅ **API interactions:** curl requests to `/self-service/*` endpoints
+- ✅ **MFA setup:** TOTP via authenticator app (if enabled)
+- ✅ **Password recovery flow**
+- ✅ **Webhooks** triggered on key identity lifecycle events
+- ✅ **User traits** and identity schema validation
+
+---
+
+## 🧰 Database Structure Overview
+
+Kratos uses a PostgreSQL-compatible schema with these key tables:
+
+- `identities` — each user; JSON field `traits` stores custom fields (e.g., email, name, role)
+- `identity_credentials` — password hashes, OIDC data, TOTP secrets
+- `sessions` — issued session tokens (cookie or JWT)
+- `self_service_flows` — tracks current state of login/registration/recovery
+- `verification_codes`, `recovery_codes` — temporary codes for flows
+- `courier_messages` — emails pending/sent (integration with SMTP)
+
+This structure makes the system modular and debuggable via database inspection.
+
+---
+
+## 🚀 Quickstart
+
+Use the provided `Makefile` for easy management of your local Kratos demo stack:
+
+### 🔧 Common Commands
+
+```bash
+make build      # Build containers
+make up         # Start services in background
+make down       # Stop and remove services
+make logs       # Tail logs from all services
+make restart    # Restart everything
+make clean      # Remove volumes and prune network
+make clean-all  # Deep cleanup: containers, images, volumes
+```
+
+All services (Kratos, UI, MailSlurper, Postgres) will be started via `docker-compose.yml`.
 
